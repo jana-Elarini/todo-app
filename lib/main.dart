@@ -1,13 +1,11 @@
-import 'dart:html';
-import 'dart:js';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:untitled9/Home/home_screen.dart';
+import 'package:untitled9/auth/register/register.dart';
 import 'package:untitled9/my_theme.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:untitled9/provider/app_config_provider.dart';
 import 'package:untitled9/provider/list_provider.dart';
 
@@ -47,6 +45,7 @@ class MyApp extends StatelessWidget {
       initialRoute: HomeScreen.routeName,
       routes: {
         HomeScreen.routeName: (context) => HomeScreen(),
+        RegisterScreen.routeName: (context) => RegisterScreen(),
       },
       theme: MyThemeData.LightTheme,
       darkTheme: MyThemeData.darkTheme,

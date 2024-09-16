@@ -34,6 +34,7 @@ class TaskListItem extends StatelessWidget {
                 FirebaseUtils.deleteTaskFromStore(task)
                     .timeout(Duration(seconds: 1), onTimeout: () {
                   print('task deleted successfully');
+                  listProvider.getAllTasksFromFireStore();
                 });
               },
               backgroundColor: Colors.red,
