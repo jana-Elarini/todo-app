@@ -1,12 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:untitled9/Firebase%20-utils.dart';
 import 'package:untitled9/model/task.dart';
 import 'package:untitled9/provider/list_provider.dart';
 
 import '../../app-colors.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../provider/user_provider.dart';
 
 class AddTaskBottomSheet extends StatefulWidget {
   @override
@@ -127,14 +127,21 @@ class _AddTaskBottomSheetState extends State<AddTaskBottomSheet> {
 
   void addTask() {
     if (formKey.currentState?.validate() == true) {
+      var userProvider = Provider.of<UserProvider>(context, listen: false);
       Task task =
           Task(title: title, description: description, dateTime: selectDate);
-      FirebaseUtils.addTaskToFireStore(task).timeout(Duration(seconds: 1),
-          onTimeout: () {
-        print('task added successfully');
-        listProvider.getAllTasksFromFireStore();
+      FirebaseUtils.addTaskToFireStore(task, userProvider.currentUser!.id)
+          .then((value) {
+        listProvider.getAllTasksFromFireStore(userProvider.currentUser!.id);
         Navigator.pop(context);
-      });
+      }).timeout(
+        Duration(seconds: 1),
+        onTimeout: () {
+          print('task added successfully');
+          listProvider.getAllTasksFromFireStore(userProvider.currentUser!.id);
+          Navigator.pop(context);
+        },
+      );
     }
   }
 

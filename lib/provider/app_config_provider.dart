@@ -5,7 +5,7 @@ class AppConfigProvider extends ChangeNotifier {
 
   ThemeMode appMode = ThemeMode.light;
 
-  void changeLanguage(String newLanguage) {
+  Future<void> changeLanguage(String newLanguage) async {
     if (appLanguage == newLanguage) {
       return;
     }
@@ -13,10 +13,11 @@ class AppConfigProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void changeTheme(ThemeMode newMode) {
+  Future<void> changeTheme(ThemeMode newMode) async {
     if (appMode == newMode) {
       return;
     }
+
     appMode = newMode;
     notifyListeners();
   }

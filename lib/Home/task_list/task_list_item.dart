@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import 'package:untitled9/Firebase%20-utils.dart';
 import 'package:untitled9/model/task.dart';
 import 'package:untitled9/provider/list_provider.dart';
+
 import '../../app-colors.dart';
+import '../../provider/user_provider.dart';
 
 class TaskListItem extends StatelessWidget {
   Task task;
@@ -31,10 +33,18 @@ class TaskListItem extends StatelessWidget {
             SlidableAction(
               borderRadius: BorderRadius.circular(15),
               onPressed: (context) {
-                FirebaseUtils.deleteTaskFromStore(task)
-                    .timeout(Duration(seconds: 1), onTimeout: () {
+                var userProvider =
+                    Provider.of<UserProvider>(context, listen: false);
+                FirebaseUtils.deleteTaskFromFireStore(
+                        task, userProvider.currentUser!.id)
+                    .then((value) {
                   print('task deleted successfully');
-                  listProvider.getAllTasksFromFireStore();
+                  listProvider
+                      .getAllTasksFromFireStore(userProvider.currentUser!.id);
+                }).timeout(Duration(seconds: 1), onTimeout: () {
+                  print('task deleted successfully');
+                  listProvider
+                      .getAllTasksFromFireStore(userProvider.currentUser!.id);
                 });
               },
               backgroundColor: Colors.red,

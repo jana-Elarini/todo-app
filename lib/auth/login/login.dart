@@ -1,26 +1,28 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:untitled9/app-colors.dart';
 import 'package:untitled9/auth/custom_txt_field.dart';
-import 'package:untitled9/dialog.utils.dart';
+import 'package:untitled9/auth/register/register.dart';
 
 import '../../Firebase -utils.dart';
 import '../../Home/home_screen.dart';
-import '../../model/my_user.dart';
+import '../../dialog.utils.dart';
 import '../../provider/user_provider.dart';
 
-class RegisterScreen extends StatelessWidget {
-  static const String routeName = 'register screen';
-  TextEditingController nameController = TextEditingController(text: 'Jana');
+class LoginScreen extends StatelessWidget {
+  static const String routeName = 'login_screen';
+
   TextEditingController emailController =
       TextEditingController(text: 'jana@route.com');
   TextEditingController passwordController =
       TextEditingController(text: '123456');
-  TextEditingController confirmPasswordController =
-      TextEditingController(text: '123456');
   var formKey = GlobalKey<FormState>();
+  late UserProvider userProvider;
+
   @override
   Widget build(BuildContext context) {
+    var userProvider = Provider.of<UserProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
@@ -29,17 +31,17 @@ class RegisterScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Text(
+                'Welcome Back!',
+                textAlign: TextAlign.center,
+              ),
+            ),
             Form(
                 child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: Text(
-                    'Welcome Back!',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
                 CustomTxtForm(
                   label: 'Email',
                   controller: emailController,
@@ -76,14 +78,27 @@ class RegisterScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(15.0),
                   child: ElevatedButton(
                     onPressed: () {
-                      register(context);
+                      login(context);
                     },
                     child: Text(
                       'Login',
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ),
-                )
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushNamed(RegisterScreen.routeName);
+                    },
+                    child: Text(
+                      'Or Create Account ',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppColors.primaryColor, fontSize: 20),
+                    ),
+                  ),
+                ),
               ],
             ))
           ],
@@ -92,65 +107,53 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  void register(BuildContext context) async {
-    ///Valid == true , Not Valid == false , lw true hyb2a rg3 null
-    ///show loading
-
+  void login(BuildContext context) async {
+    /////show loading
     if (formKey.currentState?.validate() == true) {
-      DialogUtils.showLoading(
-        context: context,
-        loadingLabel: 'Loading...',
-      );
       try {
+        DialogUtils.showLoading(context: context, loadingLabel: 'Waiting');
         final credential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text,
           password: passwordController.text,
+          //hide loading
+          //show message
         );
 
-        MyUser myUser = MyUser(
-            id: credential.user?.uid ?? '',
-            name: nameController.text,
-            email: emailController.text);
+        var user = await FirebaseUtils.readUserFromFireStore(
+            credential.user?.uid ?? '');
+        if (user == null) {
+          return;
+        }
 
-        print('before database');
-        await FirebaseUtils.addUserToFireStore(myUser);
         var userProvider = Provider.of<UserProvider>(context, listen: false);
-        userProvider.updateUser(myUser);
-        print('after database');
+        userProvider.updateUser(user);
 
         //hide loading
         DialogUtils.hideLoading(context);
         //show message
         DialogUtils.showMessage(
             context: context,
-            content: 'Register Successfully.',
+            content: 'Login Successfully.',
             title: 'Success',
             posActionName: 'OK',
             posAction: () {
               Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
             });
+        print(credential.user?.uid ?? "");
       } on FirebaseAuthException catch (e) {
-        if (e.code == 'weak-password') {
+        if (e.code == 'invalid-credential') {
           //hide loading
           DialogUtils.hideLoading(context);
           //show message
           DialogUtils.showMessage(
               context: context,
-              content: 'The password provided is too weak.',
+              content:
+                  'The supplied auth credential is incorrect, malformed or has expired.',
               title: 'Error',
               posActionName: 'OK');
-          print('The password provided is too weak.');
-        } else if (e.code == 'email-already-in-use') {
-          //hide loading
-          DialogUtils.hideLoading(context);
-          //show message
-          DialogUtils.showMessage(
-              context: context,
-              content: 'The account already exists for that email.',
-              title: 'Error',
-              posActionName: 'OK');
-          print('The account already exists for that email.');
+          print(
+              'The supplied auth credential is incorrect, malformed or has expired.');
         }
       } catch (e) {
         //hide loading
@@ -161,7 +164,7 @@ class RegisterScreen extends StatelessWidget {
             content: e.toString(),
             title: 'Error',
             posActionName: 'OK');
-        print(e);
+        print(e.toString());
       }
     }
   }

@@ -1,10 +1,10 @@
 import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled9/Firebase%20-utils.dart';
 import 'package:untitled9/Home/task_list/task_list_item.dart';
-import 'package:untitled9/model/task.dart';
 import 'package:untitled9/provider/list_provider.dart';
+
+import '../../provider/user_provider.dart';
 
 class TaskListTab extends StatefulWidget {
   @override
@@ -15,8 +15,9 @@ class _TaskListTabState extends State<TaskListTab> {
   @override
   Widget build(BuildContext context) {
     var listProvider = Provider.of<ListProvider>(context);
+    var userProvider = Provider.of<UserProvider>(context);
     if (listProvider.tasksList.isEmpty) {
-      listProvider.getAllTasksFromFireStore();
+      listProvider.getAllTasksFromFireStore(userProvider.currentUser!.id);
     }
     return Container(
       child: Column(
@@ -24,7 +25,8 @@ class _TaskListTabState extends State<TaskListTab> {
           EasyDateTimeLine(
             initialDate: DateTime.now(),
             onDateChange: (selectedDate) {
-              listProvider.changeSelectDate(selectedDate);
+              listProvider.changeSelectDate(
+                  selectedDate, userProvider.currentUser!.id);
 
               //selectedDate the new date selected.
             },
